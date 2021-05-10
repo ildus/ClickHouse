@@ -377,14 +377,15 @@ public:
         assertNoParameters(getName(), params_);
     }
 
-    String getName() const override {
+    String getName() const override
+    {
         if constexpr (overflow)
         {
             return "sumMapWithOverflow";
         }
         else
         {
-            return "sumMappedArrays";
+            return "sumMap";
         }
     }
 
@@ -547,7 +548,7 @@ public:
         assertNoParameters(getName(), params_);
     }
 
-    String getName() const override { return "minMappedArrays"; }
+    String getName() const override { return "minMap"; }
 
     bool keepKey(const T &) const { return true; }
 };
@@ -571,7 +572,7 @@ public:
         assertNoParameters(getName(), params_);
     }
 
-    String getName() const override { return "maxMappedArrays"; }
+    String getName() const override { return "maxMap"; }
 
     bool keepKey(const T &) const { return true; }
 };
