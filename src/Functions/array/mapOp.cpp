@@ -32,15 +32,15 @@ struct TupArg
     const IColumn::Offsets & val_offsets;
     bool is_const;
 };
-using TupleMaps = std::vector<struct TupArg>;
+using TupleMaps = std::vector<TupArg>;
 
-namespace OpTypes
+enum class OpTypes
 {
-    extern const int ADD = 0;
-    extern const int SUBTRACT = 1;
-}
+    ADD = 0,
+    SUBTRACT = 1
+};
 
-template <int op_type>
+template <OpTypes op_type>
 class FunctionMapOp : public IFunction
 {
 public:
