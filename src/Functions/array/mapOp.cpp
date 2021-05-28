@@ -137,49 +137,36 @@ private:
 
         for (const auto & arg : arguments)
         {
-            const DataTypeArray * k;
-            const DataTypeArray * v;
-
-            const DataTypeTuple * tup = checkAndGetDataType<DataTypeTuple>(arg.get());
-            if (!tup)
+            const auto * map = checkAndGetDataType<DataTypeMap>(arg.get());
+            if (!map)
                 throw Exception{getName() + " accepts at least two map tuples", ErrorCodes::NUMBER_OF_ARGUMENTS_DOESNT_MATCH};
 
-            auto elems = tup->getElements();
-            if (elems.size() != 2)
-                throw Exception(
-                    "Each tuple in " + getName() + " arguments should consist of two arrays", ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT);
+            const auto & k = map->getKeyType();
+            const auto & v = map->getValueType();
 
-            k = checkAndGetDataType<DataTypeArray>(elems[0].get());
-            v = checkAndGetDataType<DataTypeArray>(elems[1].get());
-
-            if (!k || !v)
-                throw Exception(
-                    "Each tuple in " + getName() + " arguments should consist of two arrays", ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT);
-
-            auto result_type = v->getNestedType();
-            if (!result_type->canBePromoted())
+            if (!v->canBePromoted())
                 throw Exception{"Values to be summed are expected to be Numeric, Float or Decimal.",
                                 ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT};
 
-            WhichDataType which_val(result_type);
+            WhichDataType which_val(v);
 
-            auto promoted_type = result_type->promoteNumericType();
+            auto promoted_type = v->promoteNumericType();
             if (!key_type)
             {
-                key_type = k->getNestedType();
+                key_type = k;
                 val_type = promoted_type;
                 is_float = which_val.isFloat();
             }
             else
             {
-                if (!(k->getNestedType()->equals(*key_type)))
+                if (!(k->equals(*key_type)))
                     throw Exception(
                         "All key types in " + getName() + " should be same: " + key_type->getName(),
                         ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT);
 
                 if (is_float != which_val.isFloat())
                     throw Exception(
-                        "All value types in " + getName() + " should be or float or integer", ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT);
+                        "All value types in " + getName() + " should be ether or float or integer", ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT);
 
                 if (!(promoted_type->equals(*val_type)))
                 {
@@ -192,8 +179,8 @@ private:
 
             if (!res)
             {
-                res = std::make_shared<DataTypeTuple>(
-                    DataTypes{std::make_shared<DataTypeArray>(k->getNestedType()), std::make_shared<DataTypeArray>(promoted_type)});
+                res = std::make_shared<DataTypeMap>(
+                    DataTypes({key_type, promoted_type}));
             }
         }
 
